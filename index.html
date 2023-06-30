@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Subir y mostrar imágenes</title>
+  <style>
+    /* Estilos CSS para la apariencia de la página */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-image: url('https://media.admagazine.com/photos/646be39a7c824a535c542d50/16:9/w_2560%2Cc_limit/KitchenAid-1.jpg');
+      background-size: cover;
+      background-repeat: no-repeat;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    
+    h1 {
+      color: #ffffff;
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 48px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 10px;
+      border-radius: 4px;
+    }
+    
+    #upload-container {
+      position: absolute;
+      top: 1cm;
+      right: 1cm;
+      display: flex;
+      align-items: center;
+    }
+    
+    #buttons-container {
+      display: flex;
+      flex-direction: row;
+    }
+    
+    .custom-file-upload {
+      display: block;
+      padding: 12px;
+      background-color: #ffffff;
+      color: #000000;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      margin-left: 5px;
+      font-size: 18px;
+      text-transform: uppercase;
+      transition: background-color 0.3s;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .custom-file-upload:hover {
+      background-color: #eeeeee;
+    }
+    
+    #gallery {
+      width: 80%;
+      max-height: 80vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      margin-left: 1cm;
+    }
+    
+    .image-container {
+      position: relative;
+      margin-bottom: 20px;
+      border-radius: 4px;
+      background-color: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      aspect-ratio: auto;
+    }
+    
+    .image-container img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+    
+    .delete-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 5px;
+      background-color: #f44336;
+      color: #ffffff;
+      font-size: 14px;
+      border-radius: 50%;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    
+    .image-container:hover .delete-button {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <h1>Nuestras Recetas</h1>
+  
+  <div id="upload-container">
+    <div class="title">Sube tu receta</div>
+    <div id="buttons-container">
+      <!-- Botón para seleccionar el archivo de imagen -->
+      <button class="custom-file-upload" onclick="document.getElementById('file-input').click()">Seleccionar receta</button>
+      <input type="file" id="file-input" accept="image/*" style="display: none;">
+      <!-- Botón para subir la receta -->
+      <button id="upload-button" class="custom-file-upload" disabled>Subir receta</button>
+    </div>
+  </div>
+  
+  <div id="gallery"></div>
+  
+  <script>
+    // Obtener referencias a elementos HTML
+    const fileInput = document.getElementById('file-input');
+    const uploadButton = document.getElementById('upload-button');
+    const gallery = document.getElementById('gallery');
+    
+    // Arreglo para almacenar las imágenes guardadas
+    let savedImages = [];
+    
+    // Función para mostrar las imágenes guardadas en la galería
+    function displaySavedImages() {
+      // Recorrer el arreglo de imágenes guardadas
+      for (let i = 0; i < savedImages.length; i++) {
+        // Crear un elemento de imagen y establecer la fuente
+        const image = document.createElement('img');
+        image.src = savedImages[i];
+        
+        // Crear un contenedor para la imagen y agregarla al contenedor
+        const imageContainer = document.createElement('div');
+        imageContainer.classList.add('image-container');
+        imageContainer.appendChild(image);
+        
+        // Crear el botón de eliminar
+        const deleteButton = document.createElement('div');
+        deleteButton.classList.add('delete-button');
+        deleteButton.innerText = 'Eliminar';
+        
+        // Agregar el botón de eliminar al contenedor de imagen
+        imageContainer.appendChild(deleteButton);
+        
+        // Agregar el contenedor de imagen a la galería
+        gallery.appendChild(imageContainer);
+        
+        // Manejar el evento de clic en el botón de eliminar
+        deleteButton.addEventListener('click', function() {
+          // Eliminar el contenedor de imagen de la galería
+          gallery.removeChild(imageContainer);
+          
+          // Eliminar la imagen del arreglo de imágenes guardadas
+          savedImages.splice(i, 1);
+          
+          // Guardar las imágenes actualizadas en el almacenamiento local
+          localStorage.setItem('uploadedImages', JSON.stringify(savedImages));
+        });
+      }
+    }
+    
+    // Manejar el evento de cambio en el input de archivo
+    fileInput.addEventListener('change', function(event) {
+      // Obtener el archivo de imagen seleccionado por el usuario
+      const file = event.target.files[0];
+      
+      // Verificar si se seleccionó un archivo
+      if (file) {
+        uploadButton.disabled = false;
+      } else {
+        uploadButton.disabled = true;
+      }
+    });
+    
+    // Manejar el evento de clic en el botón de subir
+    uploadButton.addEventListener('click', function() {
+      // Obtener el archivo de imagen seleccionado
+      const file = fileInput.files[0];
+      
+      // Verificar si se seleccionó un archivo
+      if (file) {
+        // Crear un objeto FileReader para leer el archivo
+        const reader = new FileReader();
+        
+        // Manejar el evento de carga del archivo
+        reader.onload = function() {
+          // Crear un elemento de imagen y establecer la fuente
+          const image = document.createElement('img');
+          image.src = reader.result;
+          
+          // Crear un contenedor para la imagen y agregarla al contenedor
+          const imageContainer = document.createElement('div');
+          imageContainer.classList.add('image-container');
+          imageContainer.appendChild(image);
+          
+          // Crear el botón de eliminar
+          const deleteButton = document.createElement('div');
+          deleteButton.classList.add('delete-button');
+          deleteButton.innerText = 'Eliminar';
+          
+          // Agregar el botón de eliminar al contenedor de imagen
+          imageContainer.appendChild(deleteButton);
+          
+          // Agregar el contenedor de imagen a la galería
+          gallery.appendChild(imageContainer);
+          
+          // Guardar la imagen en el arreglo de imágenes guardadas
+          savedImages.push(reader.result);
+          
+          // Guardar las imágenes en el almacenamiento local
+          localStorage.setItem('uploadedImages', JSON.stringify(savedImages));
+          
+          // Manejar el evento de clic en el botón de eliminar
+          deleteButton.addEventListener('click', function() {
+            // Eliminar el contenedor de imagen de la galería
+            gallery.removeChild(imageContainer);
+            
+            // Eliminar la imagen del arreglo de imágenes guardadas
+            const index = savedImages.indexOf(reader.result);
+            savedImages.splice(index, 1);
+            
+            // Guardar las imágenes actualizadas en el almacenamiento local
+            localStorage.setItem('uploadedImages', JSON.stringify(savedImages));
+          });
+        };
+        
+        // Leer el archivo como una URL de datos
+        reader.readAsDataURL(file);
+        
+        // Restablecer el valor del input de archivo
+        fileInput.value = '';
+        uploadButton.disabled = true;
+      }
+    });
+    
+    // Cargar las imágenes guardadas al cargar la página
+    window.addEventListener('load', function() {
+      // Obtener las imágenes guardadas del almacenamiento local
+      const savedImagesData = localStorage.getItem('uploadedImages');
+      
+      // Verificar si hay imágenes guardadas
+      if (savedImagesData) {
+        savedImages = JSON.parse(savedImagesData);
+        
+        // Mostrar las imágenes guardadas en la galería
+        displaySavedImages();
+      }
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
